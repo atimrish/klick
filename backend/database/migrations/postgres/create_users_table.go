@@ -9,6 +9,7 @@ func UpUsersTable() string {
     		login VARCHAR(20) UNIQUE,
     		password VARCHAR(255),
     		email VARCHAR(40) UNIQUE,
+    		photo VARCHAR(255),
     		created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             updated_at TIMESTAMP NULL DEFAULT NULL
 	)`

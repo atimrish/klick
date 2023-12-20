@@ -1,25 +1,26 @@
 package cmd
 
 import (
-	"backend/database/helpers"
+	"backend/database/db"
 	"backend/database/migrations/postgres"
+	"backend/helpers"
 	"fmt"
 )
 
 var (
-	migrationsUp = []func() string {
+	migrationsUp = []func() string{
 		postgres.UpUsersTable,
 		postgres.UpFriendsTable,
 	}
 
-	migrationsDown = []func() string {
+	migrationsDown = []func() string{
 		postgres.DownUsersTable,
 		postgres.DownFriendsTable,
 	}
 )
 
 func Migrate() {
-	connection := helpers.PostgresConnection()
+	connection := db.PostgresConnection()
 	defer connection.Close()
 
 	for _, f := range migrationsUp {
@@ -37,10 +38,12 @@ func Migrate() {
 }
 
 func Down() {
-	connection := helpers.PostgresConnection()
+	connection := db.PostgresConnection()
 	defer connection.Close()
 
-	for _, f := range migrationsDown {
+	migrations := helpers.ArrayReverse(&migrationsDown)
+	
+	for _, f := range migrations {
 		sql := f()
 
 		_, err := connection.Exec(sql)

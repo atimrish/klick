@@ -1,14 +1,14 @@
 package router
 
 import (
-	"backend/database/helpers"
+	"backend/database/db"
 	"github.com/gin-gonic/gin"
 )
 
 func InitRouter(router *gin.Engine) {
 	router.GET("/test", func(context *gin.Context) {
 
-		db := helpers.PostgresConnection()
+		db := db.PostgresConnection()
 		defer db.Close()
 
 		rows, err := db.Query("SELECT 121")
@@ -30,7 +30,7 @@ func InitRouter(router *gin.Engine) {
 
 		}
 
-		context.JSON(200, gin.H {
+		context.JSON(200, gin.H{
 			"message": tmp,
 		})
 	})

@@ -1,4 +1,4 @@
-package helpers
+package db
 
 import (
 	"context"
@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-func PostgresConnection() *sql.DB  {
+func PostgresConnection() *sql.DB {
 	connectionString := fmt.Sprintf(
 		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
 		"localhost",
@@ -17,7 +17,7 @@ func PostgresConnection() *sql.DB  {
 		"root",
 		"root",
 		"social_network",
-		)
+	)
 
 	connection, err := sql.Open("postgres", connectionString)
 

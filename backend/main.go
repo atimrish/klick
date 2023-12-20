@@ -2,7 +2,9 @@ package main
 
 import (
 	"backend/cmd"
-	"backend/database/helpers"
+	"backend/database/db"
+	"backend/database/models/user"
+	"backend/helpers"
 	"flag"
 	"fmt"
 )
@@ -25,7 +27,7 @@ func main() {
 		break
 
 	case "mongo_ping":
-		connection, ctx := helpers.MongoConnection()
+		connection, ctx := db.MongoConnection()
 		err := connection.Ping(ctx, nil)
 
 		if err != nil {
@@ -33,6 +35,36 @@ func main() {
 		}
 
 		fmt.Println("successfully connect to mongo")
+		break
+
+	case "create_user":
+		tmpUser := user.NewUser(0, "test", "test", "test", "test", "test", "test")
+
+		err := user.CreateUser(tmpUser)
+		helpers.HandleError(err)
+
+		fmt.Println("user created")
+		break
+
+	case "get_users":
+		fmt.Println(user.GetAllUsers())
+		break
+
+	case "update_user":
+		users := user.GetAllUsers()
+		tmpUser := (*users)[0]
+		user.SetUserName(&tmpUser, "updated")
+		user.UpdateUser(&tmpUser)
+
+		fmt.Println("user updated")
+		break
+
+	case "delete_user":
+		users := user.GetAllUsers()
+		tmpUser := (*users)[0]
+		user.DeleteUser(user.GetUserId(&tmpUser))
+
+		fmt.Println("user deleted")
 		break
 
 	default:
