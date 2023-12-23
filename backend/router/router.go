@@ -1,6 +1,7 @@
 package router
 
 import (
+	"backend/controllers/UserController"
 	"backend/database/db"
 	"github.com/gin-gonic/gin"
 )
@@ -34,4 +35,5 @@ func InitRouter(router *gin.Engine) {
 			"message": tmp,
 		})
 	})
+	router.POST("/register", UserController.Register)
 }
