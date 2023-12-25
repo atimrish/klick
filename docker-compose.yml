@@ -18,3 +18,15 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: root
       MONGO_INITDB_ROOT_PASSWORD: example
+  backend:
+    build:
+      context: ./docker/backend
+    volumes:
+      - "./backend:/srv"
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_started
+      mongo:
+        condition: service_started

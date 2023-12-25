@@ -53,7 +53,7 @@ func main() {
 	case "update_user":
 		users := user.GetAllUsers()
 		tmpUser := (*users)[0]
-		user.SetUserName(&tmpUser, "updated")
+		tmpUser.Name = "dasd"
 		user.UpdateUser(&tmpUser)
 
 		fmt.Println("user updated")
@@ -62,7 +62,7 @@ func main() {
 	case "delete_user":
 		users := user.GetAllUsers()
 		tmpUser := (*users)[0]
-		user.DeleteUser(user.GetUserId(&tmpUser))
+		user.DeleteUser(tmpUser.Id)
 
 		fmt.Println("user deleted")
 		break

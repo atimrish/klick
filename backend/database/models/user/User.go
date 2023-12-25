@@ -9,24 +9,24 @@ import (
 const tableName = "users"
 
 type User struct {
-	id       int64
-	surname  string
-	name     string
-	login    string
-	password string
-	email    string
-	photo    string
+	Id       int64
+	Surname  string
+	Name     string
+	Login    string
+	Password string
+	Email    string
+	Photo    string
 }
 
 func NewUser(id int64, surname, name, login, password, email, photo string) *User {
 	tmpUser := User{
-		id:       id,
-		surname:  surname,
-		name:     name,
-		login:    login,
-		password: password,
-		email:    email,
-		photo:    photo,
+		Id:       id,
+		Surname:  surname,
+		Name:     name,
+		Login:    login,
+		Password: password,
+		Email:    email,
+		Photo:    photo,
 	}
 
 	return &tmpUser
@@ -44,7 +44,7 @@ func GetAllUsers() *[]User {
 
 	for rows.Next() {
 		var user User
-		err := rows.Scan(&user.id, &user.surname, &user.name, &user.login, &user.password, &user.email, &user.photo)
+		err := rows.Scan(&user.Id, &user.Surname, &user.Name, &user.Login, &user.Password, &user.Email, &user.Photo)
 		helpers.HandleError(err)
 
 		users = append(users, user)
@@ -60,8 +60,8 @@ func CreateUser(user *User) error {
 	query := `INSERT INTO users(surname, name, login, password, email, photo) 
 				VALUES ('%s', '%s', '%s', '%s', '%s', '%s') RETURNING id`
 
-	query = fmt.Sprintf(query, user.surname, user.name, user.login, user.password, user.email, user.photo)
-	connection.QueryRow(query).Scan(&user.id)
+	query = fmt.Sprintf(query, user.Surname, user.Name, user.Login, user.Password, user.Email, user.Photo)
+	connection.QueryRow(query).Scan(&user.Id)
 
 	return nil
 }
@@ -81,7 +81,7 @@ func UpdateUser(user *User) {
 				updated_at = CURRENT_TIMESTAMP
 		WHERE users.id = %d`
 
-	query = fmt.Sprintf(query, user.surname, user.name, user.login, user.email, user.photo, user.id)
+	query = fmt.Sprintf(query, user.Surname, user.Name, user.Login, user.Email, user.Photo, user.Id)
 
 	_, err := connection.Exec(query)
 	helpers.HandleError(err)
@@ -98,10 +98,23 @@ func DeleteUser(id int64) {
 	helpers.HandleError(err)
 }
 
-func SetUserName(user *User, name string) {
-	user.name = name
-}
+func FindUserByLogin(login string) (User, bool) {
+	connection := db.PostgresConnection()
+	defer connection.Close()
 
-func GetUserId(user *User) int64 {
-	return user.id
+	query := `SELECT id, surname, name, login, password, email, photo FROM users WHERE login = '%s'`
+	rows, err := connection.Query(fmt.Sprintf(query, login))
+
+	helpers.HandleError(err)
+	defer rows.Close()
+
+	var user User
+	hasUser := false
+	for rows.Next() {
+		err := rows.Scan(&user.Id, &user.Surname, &user.Name, &user.Login, &user.Password, &user.Email, &user.Photo)
+		helpers.HandleError(err)
+		hasUser = true
+	}
+
+	return user, hasUser
 }
