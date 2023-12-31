@@ -9,10 +9,10 @@ import (
 func InitRouter(router *gin.Engine) {
 	router.GET("/test", func(context *gin.Context) {
 
-		db := db.PostgresConnection()
-		defer db.Close()
+		connection := db.PostgresConnection()
+		defer connection.Close()
 
-		rows, err := db.Query("SELECT 121")
+		rows, err := connection.Query("SELECT 121")
 
 		defer rows.Close()
 
@@ -35,5 +35,7 @@ func InitRouter(router *gin.Engine) {
 			"message": tmp,
 		})
 	})
+
 	router.POST("/register", UserController.Register)
+	router.POST("/login", UserController.Login)
 }

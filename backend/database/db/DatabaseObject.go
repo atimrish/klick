@@ -15,7 +15,7 @@ func PostgresConnection() *sql.DB {
 	config := conf.GetConfig()
 
 	connectionString := fmt.Sprintf(
-		"host=%s port=%d user=%s password=%s dbname=%s sslmode=disable",
+		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
 		config["postgres_address"],
 		config["postgres_port"],
 		config["postgres_user"],
@@ -40,11 +40,12 @@ func CheckUniquePostgres(table, column string, value any) bool {
 
 	rows, err := connection.Query(query)
 	defer rows.Close()
+	fmt.Println("error123 ", err)
 	helpers.HandleError(err)
 
-	for rows.Next() {
+	for (*rows).Next() {
 		var tmpVal string
-		err := rows.Scan(&tmpVal)
+		err := (*rows).Scan(&tmpVal)
 		fmt.Println("log: ", tmpVal)
 		fmt.Println("log [=] : ", tmpVal == value)
 		helpers.HandleError(err)

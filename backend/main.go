@@ -3,7 +3,6 @@ package main
 import (
 	"backend/cmd"
 	"backend/database/db"
-	"backend/database/models/user"
 	"backend/helpers"
 	"flag"
 	"fmt"
@@ -37,34 +36,11 @@ func main() {
 		fmt.Println("successfully connect to mongo")
 		break
 
-	case "create_user":
-		tmpUser := user.NewUser(0, "test", "test", "test", "test", "test", "test")
+	case "test":
 
-		err := user.CreateUser(tmpUser)
-		helpers.HandleError(err)
+		claims := helpers.GetPayloadJWT("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MDM4ODA0ODcsInRva2VuX2lkZW50aXR5Ijoi77-9IiwidXNlcl9pZCI6N30.EgPIsOEkhgXuJ78SN4uWnKT4qDnvv5wExWBQakxwaBI")
+		fmt.Println(claims)
 
-		fmt.Println("user created")
-		break
-
-	case "get_users":
-		fmt.Println(user.GetAllUsers())
-		break
-
-	case "update_user":
-		users := user.GetAllUsers()
-		tmpUser := (*users)[0]
-		tmpUser.Name = "dasd"
-		user.UpdateUser(&tmpUser)
-
-		fmt.Println("user updated")
-		break
-
-	case "delete_user":
-		users := user.GetAllUsers()
-		tmpUser := (*users)[0]
-		user.DeleteUser(tmpUser.Id)
-
-		fmt.Println("user deleted")
 		break
 
 	default:
