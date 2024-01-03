@@ -3,7 +3,8 @@ package friend
 const tableName = "friends"
 
 type Friend struct {
-	id       uint16
-	userId   uint16
-	friendId uint16
+	Id       int64
+	UserId   int64
+	FriendId int64
+	Status   string
 }

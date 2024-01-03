@@ -12,3 +12,16 @@ func ArrayReverse[T any](array *[]T) []T {
 
 	return tmpArray
 }
+
+func ArrayContains[T string](array *[]T, value T) bool {
+	length := len(*array)
+
+	for i := 0; i < length; i++ {
+		if (*array)[i] == value {
+			return true
+		}
+	}
+
+	return false
+}
+

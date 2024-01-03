@@ -10,10 +10,17 @@ import (
 
 var jwtSecret = conf.GetConfig()["jwt_secret"]
 
-func MakeJWT(payload map[string]any) string {
+type CustomClaims struct {
+	UserId        int64 `json:"user_id"`
+	TokenIdentity int   `json:"token_identity"`
+	IsAdmin       bool  `json:"is_admin"`
+	JWT.RegisteredClaims
+}
+
+func MakeJWT(payload CustomClaims) string {
 	encodedSecret, err := base64.StdEncoding.DecodeString(jwtSecret)
 	HandleError(err)
-	token := JWT.NewWithClaims(JWT.SigningMethodHS256, JWT.MapClaims(payload))
+	token := JWT.NewWithClaims(JWT.SigningMethodHS256, payload)
 
 	t, err := token.SignedString(encodedSecret)
 	HandleError(err)
@@ -21,8 +28,8 @@ func MakeJWT(payload map[string]any) string {
 	return t
 }
 
-func GetPayloadJWT(tokenString string) JWT.MapClaims {
-	claims := JWT.MapClaims{}
+func GetPayloadJWT(tokenString string) CustomClaims {
+	var claims CustomClaims
 	_, err := JWT.ParseWithClaims(tokenString, claims, func(t *JWT.Token) (interface{}, error) {
 		encodedSecret, err := base64.StdEncoding.DecodeString(jwtSecret)
 		return encodedSecret, err
@@ -36,24 +43,30 @@ func RefreshToken(accessToken, refreshToken string) (string, string) {
 	accessPayload := GetPayloadJWT(accessToken)
 	refreshPayload := GetPayloadJWT(refreshToken)
 
-	if accessPayload["token_identity"] == refreshPayload["token_identity"] {
+	if accessPayload.TokenIdentity == refreshPayload.TokenIdentity {
 
 		tokenIdentity := rand.Int()
 
-		payload := map[string]any{
-			"user_id":        accessPayload["user_id"],
-			"is_admin":       false,
-			"token_identity": tokenIdentity,
-			"exp":            time.Now().Add(time.Minute * 15).Unix(),
+		expAccess := JWT.NumericDate{
+			time.Now().Add(time.Minute * 15),
+		}
+
+		payload := CustomClaims{
+			UserId:        accessPayload.UserId,
+			TokenIdentity: tokenIdentity,
+			IsAdmin:       false,
+			RegisteredClaims: JWT.RegisteredClaims{
+				ExpiresAt: &expAccess,
+			},
 		}
 
 		newAccessToken := MakeJWT(payload)
 
-		payload = map[string]any{
-			"user_id":        accessPayload["user_id"],
-			"token_identity": tokenIdentity,
-			"exp":            time.Now().Add(time.Hour * 48).Unix(),
+		expRefresh := JWT.NumericDate{
+			time.Now().Add(time.Hour * 48),
 		}
+
+		payload.ExpiresAt = &expRefresh
 
 		newRefreshToken := MakeJWT(payload)
 

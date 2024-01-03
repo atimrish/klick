@@ -6,6 +6,7 @@ import (
 	"backend/helpers"
 	"fmt"
 	"github.com/gin-gonic/gin"
+	JWT "github.com/golang-jwt/jwt/v5"
 	"math/rand"
 	"path/filepath"
 	"strconv"
@@ -60,11 +61,18 @@ func Register(c *gin.Context) {
 	helpers.HandleError(err)
 
 	tokenIdentity := rand.Int()
-	payload := map[string]any{
-		"token_identity": tokenIdentity,
-		"user_id":        newUser.Id,
-		"is_admin":       false,
-		"exp":            time.Now().Add(time.Minute * 15).Unix(),
+
+	expAccess := JWT.NumericDate{
+		time.Now().Add(time.Minute * 15),
+	}
+
+	payload := helpers.CustomClaims{
+		UserId:           newUser.Id,
+		TokenIdentity:    tokenIdentity,
+		IsAdmin:          false,
+		RegisteredClaims: JWT.RegisteredClaims{
+			ExpiresAt: &expAccess,
+		},
 	}
 
 	token := helpers.MakeJWT(payload)
@@ -79,10 +87,16 @@ func Register(c *gin.Context) {
 		true,
 	)
 
-	payload = map[string]any{
-		"user_id":        newUser.Id,
-		"token_identity": tokenIdentity,
-		"exp":            time.Now().Add(time.Hour * 48).Unix(),
+	expRefresh := JWT.NumericDate{
+		time.Now().Add(time.Hour * 48),
+	}
+	payload = helpers.CustomClaims{
+		UserId:           newUser.Id,
+		TokenIdentity:    tokenIdentity,
+		IsAdmin:          false,
+		RegisteredClaims: JWT.RegisteredClaims{
+			ExpiresAt: &expRefresh,
+		},
 	}
 
 	c.JSON(201, gin.H{
@@ -107,11 +121,17 @@ func Login(c *gin.Context) {
 	if helpers.CheckPassword(form.Password, currentUser.Password) {
 		tokenIdentity := rand.Int()
 
-		payload := map[string]any{
-			"user_id":        currentUser.Id,
-			"is_admin":       false,
-			"token_identity": tokenIdentity,
-			"exp":            time.Now().Add(time.Minute * 15).Unix(),
+		expAccess := JWT.NumericDate{
+			time.Now().Add(time.Minute * 15),
+		}
+
+		payload := helpers.CustomClaims{
+			UserId:           currentUser.Id,
+			TokenIdentity:    tokenIdentity,
+			IsAdmin:          false,
+			RegisteredClaims: JWT.RegisteredClaims{
+				ExpiresAt: &expAccess,
+			},
 		}
 
 		token := helpers.MakeJWT(payload)
@@ -126,10 +146,16 @@ func Login(c *gin.Context) {
 			true,
 		)
 
-		payload = map[string]any{
-			"user_id":        currentUser.Id,
-			"token_identity": tokenIdentity,
-			"exp":            time.Now().Add(time.Hour * 48).Unix(),
+		expRefresh := JWT.NumericDate{
+			time.Now().Add(time.Hour * 48),
+		}
+		payload = helpers.CustomClaims{
+			UserId:           currentUser.Id,
+			TokenIdentity:    tokenIdentity,
+			IsAdmin:          false,
+			RegisteredClaims: JWT.RegisteredClaims{
+				ExpiresAt: &expRefresh,
+			},
 		}
 
 		c.JSON(201, gin.H{
