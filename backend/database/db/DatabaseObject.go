@@ -40,14 +40,13 @@ func CheckUniquePostgres(table, column string, value any) bool {
 
 	rows, err := connection.Query(query)
 	defer rows.Close()
-	fmt.Println("error123 ", err)
+
 	helpers.HandleError(err)
 
 	for (*rows).Next() {
 		var tmpVal string
 		err := (*rows).Scan(&tmpVal)
-		fmt.Println("log: ", tmpVal)
-		fmt.Println("log [=] : ", tmpVal == value)
+
 		helpers.HandleError(err)
 
 		if value == tmpVal {

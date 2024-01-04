@@ -40,7 +40,7 @@ func (form *InviteForm) Validate() ([]string, bool) {
 	}
 
 	if form.UserId == form.FriendId {
-		messages = append(messages, "user_id и friend_id не могут быть равны")
+		messages = append(messages, "вы не можете отправить запрос на дружбу самому себе")
 		hasError = true
 	}
 

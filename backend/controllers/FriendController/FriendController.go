@@ -6,6 +6,7 @@ import (
 	"backend/database/models/friend"
 	"backend/helpers"
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/gin-gonic/gin"
 )
@@ -28,13 +29,30 @@ func getInvite(userId, friendId int64) (friend.Friend, bool) {
 	row := connection.QueryRow(query)
 	err := row.Scan(&tmpFriend.Id, &tmpFriend.UserId, &tmpFriend.FriendId, &tmpFriend.Status)
 
-	switch err {
-	case sql.ErrNoRows:
+	if errors.Is(err, sql.ErrNoRows) {
 		return tmpFriend, false
-
-	default:
-		panic(err)
 	}
+	helpers.HandleError(err)
+
+	return  tmpFriend, true
+}
+
+func getInviteById(id int64) (friend.Friend, bool) {
+	query := "SELECT id, user_id, friend_id, status FROM friends WHERE id = %d"
+	query = fmt.Sprintf(query, id)
+
+	connection := db.PostgresConnection()
+	defer connection.Close()
+
+	var tmpFriend friend.Friend
+
+	row := connection.QueryRow(query)
+	err := row.Scan(&tmpFriend.Id, &tmpFriend.UserId, &tmpFriend.FriendId, &tmpFriend.Status)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return tmpFriend, false
+	}
+	helpers.HandleError(err)
 
 	return  tmpFriend, true
 }
@@ -43,6 +61,7 @@ func Invite(c *gin.Context)  {
 	var form types.InviteForm
 	err := c.Bind(&form)
 	helpers.HandleError(err)
+	form.Status = STATUS_WAITING
 
 	accessToken, err := c.Cookie("access_token")
 	helpers.HandleError(err)
@@ -51,6 +70,7 @@ func Invite(c *gin.Context)  {
 	form.UserId = payload.UserId
 
 	messages, hasError := form.Validate()
+	fmt.Println("has error: ", hasError)
 
 	if hasError {
 		c.JSON(422, gin.H{
@@ -61,6 +81,7 @@ func Invite(c *gin.Context)  {
 	}
 
 	_, hasRecord := getInvite(form.UserId, form.FriendId)
+	fmt.Println("has record: ", hasRecord)
 
 	if hasRecord {
 		c.JSON(422, gin.H{
@@ -71,7 +92,7 @@ func Invite(c *gin.Context)  {
 	}
 
 	query := "INSERT INTO friends(user_id, friend_id, status) VALUES (%d, %d, '%s')"
-	query = fmt.Sprintf(query, form.UserId, form.FriendId, STATUS_WAITING)
+	query = fmt.Sprintf(query, form.UserId, form.FriendId, form.Status)
 
 	connection := db.PostgresConnection()
 	defer connection.Close()
@@ -83,5 +104,85 @@ func Invite(c *gin.Context)  {
 		"message": "created",
 		"errors":  "запрос на дружбу отправлен",
 	})
+	return
+}
+
+func Accept(c *gin.Context)  {
+	var form types.AcceptForm
+	err := c.Bind(&form)
+	helpers.HandleError(err)
+
+	accessToken, err := c.Cookie("access_token")
+	helpers.HandleError(err)
+
+	payload := helpers.GetPayloadJWT(accessToken)
+	UserId := payload.UserId
+
+	invite, hasRecord := getInviteById(form.InviteId)
+
+	if !hasRecord {
+		c.JSON(422, gin.H{
+			"message": "error",
+			"errors":  "вы еще не отправляли запроса дружбы данному пользователю",
+		})
+		return
+	}
+
+	if invite.FriendId != UserId {
+		c.JSON(403, gin.H{
+			"message": "error",
+			"errors":  "вы не тот пользователь",
+		})
+		return
+	}
+
+	invite.Status = STATUS_ACCEPTED
+	go invite.Update()
+
+	c.JSON(200, gin.H{
+		"message": "ok",
+		"errors":  "вы подтвердили что вы друзья",
+	})
+
+	return
+}
+
+func Decline(c *gin.Context) {
+	var form types.DeclineForm
+	err := c.Bind(&form)
+	helpers.HandleError(err)
+
+	accessToken, err := c.Cookie("access_token")
+	helpers.HandleError(err)
+
+	payload := helpers.GetPayloadJWT(accessToken)
+	UserId := payload.UserId
+
+	invite, hasRecord := getInviteById(form.InviteId)
+
+	if !hasRecord {
+		c.JSON(422, gin.H{
+			"message": "error",
+			"errors":  "вы еще не отправляли запроса дружбы данному пользователю",
+		})
+		return
+	}
+
+	if invite.FriendId != UserId {
+		c.JSON(403, gin.H{
+			"message": "error",
+			"errors":  "вы не тот пользователь",
+		})
+		return
+	}
+
+	invite.Status = STATUS_DECLINED
+	go invite.Update()
+
+	c.JSON(200, gin.H{
+		"message": "ok",
+		"errors":  "вы отклонили заявку в друзья",
+	})
+
 	return
 }

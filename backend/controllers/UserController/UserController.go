@@ -4,7 +4,6 @@ import (
 	"backend/controllers/UserController/types"
 	"backend/database/models/user"
 	"backend/helpers"
-	"fmt"
 	"github.com/gin-gonic/gin"
 	JWT "github.com/golang-jwt/jwt/v5"
 	"math/rand"
@@ -23,7 +22,6 @@ func Register(c *gin.Context) {
 
 	messages, hasError := form.Validate()
 
-	fmt.Println("error: ", err)
 	if hasError {
 		c.JSON(422, gin.H{
 			"message": "error",
@@ -43,7 +41,6 @@ func Register(c *gin.Context) {
 		filename = strconv.FormatInt(time.Now().Unix(), 10) + filepath.Ext(file.Filename)
 
 		dst := "storage/user/photos/" + filename
-		fmt.Println(dst)
 		err = c.SaveUploadedFile(file, dst)
 		helpers.HandleError(err)
 
@@ -170,5 +167,28 @@ func Login(c *gin.Context) {
 }
 
 func RefreshToken(c *gin.Context)  {
-	
+	var form types.RefreshForm
+	err := c.Bind(&form)
+	helpers.HandleError(err)
+
+	accessToken, err := c.Cookie("access_token")
+	helpers.HandleError(err)
+
+	newAccess, newRefresh := helpers.RefreshToken(accessToken, form.RefreshToken)
+
+	c.SetCookie(
+		"access_token",
+		newAccess,
+		int(time.Now().Add(time.Hour*48).Unix()),
+		"/",
+		"/",
+		true,
+		true,
+	)
+
+	c.JSON(200, gin.H{
+		"message": "токен обновлен",
+		"refresh_token": newRefresh,
+	})
+	return
 }

@@ -11,9 +11,9 @@ import (
 var jwtSecret = conf.GetConfig()["jwt_secret"]
 
 type CustomClaims struct {
-	UserId        int64 `json:"user_id"`
-	TokenIdentity int   `json:"token_identity"`
-	IsAdmin       bool  `json:"is_admin"`
+	UserId               int64 `json:"user_id"`
+	TokenIdentity        int   `json:"token_identity"`
+	IsAdmin              bool  `json:"is_admin"`
 	JWT.RegisteredClaims
 }
 
@@ -28,15 +28,15 @@ func MakeJWT(payload CustomClaims) string {
 	return t
 }
 
-func GetPayloadJWT(tokenString string) CustomClaims {
-	var claims CustomClaims
-	_, err := JWT.ParseWithClaims(tokenString, claims, func(t *JWT.Token) (interface{}, error) {
+func GetPayloadJWT(tokenString string) *CustomClaims {
+
+	token, err := JWT.ParseWithClaims(tokenString, &CustomClaims{}, func(t *JWT.Token) (interface{}, error) {
 		encodedSecret, err := base64.StdEncoding.DecodeString(jwtSecret)
 		return encodedSecret, err
 	})
 	HandleError(err)
 
-	return claims
+	return token.Claims.(*CustomClaims)
 }
 
 func RefreshToken(accessToken, refreshToken string) (string, string) {
@@ -48,7 +48,7 @@ func RefreshToken(accessToken, refreshToken string) (string, string) {
 		tokenIdentity := rand.Int()
 
 		expAccess := JWT.NumericDate{
-			time.Now().Add(time.Minute * 15),
+			Time: time.Now().Add(time.Minute * 15),
 		}
 
 		payload := CustomClaims{
@@ -63,7 +63,7 @@ func RefreshToken(accessToken, refreshToken string) (string, string) {
 		newAccessToken := MakeJWT(payload)
 
 		expRefresh := JWT.NumericDate{
-			time.Now().Add(time.Hour * 48),
+			Time: time.Now().Add(time.Hour * 48),
 		}
 
 		payload.ExpiresAt = &expRefresh
