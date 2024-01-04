@@ -66,7 +66,12 @@ func Invite(c *gin.Context)  {
 	accessToken, err := c.Cookie("access_token")
 	helpers.HandleError(err)
 
-	payload := helpers.GetPayloadJWT(accessToken)
+	payload, err := helpers.GetPayloadJWT(accessToken)
+	if err != nil {
+		helpers.TokenExpiredResponse(c)
+		return
+	}
+
 	form.UserId = payload.UserId
 
 	messages, hasError := form.Validate()
@@ -115,7 +120,12 @@ func Accept(c *gin.Context)  {
 	accessToken, err := c.Cookie("access_token")
 	helpers.HandleError(err)
 
-	payload := helpers.GetPayloadJWT(accessToken)
+	payload, err := helpers.GetPayloadJWT(accessToken)
+	if err != nil {
+		helpers.TokenExpiredResponse(c)
+		return
+	}
+
 	UserId := payload.UserId
 
 	invite, hasRecord := getInviteById(form.InviteId)
@@ -155,7 +165,12 @@ func Decline(c *gin.Context) {
 	accessToken, err := c.Cookie("access_token")
 	helpers.HandleError(err)
 
-	payload := helpers.GetPayloadJWT(accessToken)
+	payload, err := helpers.GetPayloadJWT(accessToken)
+	if err != nil {
+		helpers.TokenExpiredResponse(c)
+		return
+	}
+
 	UserId := payload.UserId
 
 	invite, hasRecord := getInviteById(form.InviteId)

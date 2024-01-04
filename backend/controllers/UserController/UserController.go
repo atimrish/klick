@@ -171,10 +171,16 @@ func RefreshToken(c *gin.Context)  {
 	err := c.Bind(&form)
 	helpers.HandleError(err)
 
-	accessToken, err := c.Cookie("access_token")
-	helpers.HandleError(err)
+	accessToken, _ := c.Cookie("access_token")
 
 	newAccess, newRefresh := helpers.RefreshToken(accessToken, form.RefreshToken)
+
+	if newRefresh == "" {
+		c.JSON(422, gin.H{
+			"message": "токен невалиден",
+		})
+		return
+	}
 
 	c.SetCookie(
 		"access_token",

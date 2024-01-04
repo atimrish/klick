@@ -3,6 +3,8 @@ package helpers
 import (
 	"backend/conf"
 	"encoding/base64"
+	"errors"
+	"github.com/gin-gonic/gin"
 	JWT "github.com/golang-jwt/jwt/v5"
 	"math/rand"
 	"time"
@@ -28,20 +30,26 @@ func MakeJWT(payload CustomClaims) string {
 	return t
 }
 
-func GetPayloadJWT(tokenString string) *CustomClaims {
+func GetPayloadJWT(tokenString string) (*CustomClaims, error) {
 
 	token, err := JWT.ParseWithClaims(tokenString, &CustomClaims{}, func(t *JWT.Token) (interface{}, error) {
 		encodedSecret, err := base64.StdEncoding.DecodeString(jwtSecret)
 		return encodedSecret, err
 	})
+
+	if errors.Is(err, JWT.ErrTokenExpired) {
+
+		return token.Claims.(*CustomClaims), err
+	}
+
 	HandleError(err)
 
-	return token.Claims.(*CustomClaims)
+	return token.Claims.(*CustomClaims), nil
 }
 
 func RefreshToken(accessToken, refreshToken string) (string, string) {
-	accessPayload := GetPayloadJWT(accessToken)
-	refreshPayload := GetPayloadJWT(refreshToken)
+	accessPayload, _ := GetPayloadJWT(accessToken)
+	refreshPayload, _ := GetPayloadJWT(refreshToken)
 
 	if accessPayload.TokenIdentity == refreshPayload.TokenIdentity {
 
@@ -74,4 +82,11 @@ func RefreshToken(accessToken, refreshToken string) (string, string) {
 	}
 
 	return "", ""
+}
+
+func TokenExpiredResponse(c *gin.Context) {
+	c.JSON(403, gin.H{
+		"error": "token expired",
+		"message": "TOKEN_EXPIRED_ERROR",
+	})
 }

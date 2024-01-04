@@ -38,7 +38,7 @@ func main() {
 
 	case "test":
 
-		claims := helpers.GetPayloadJWT("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MDM4ODA0ODcsInRva2VuX2lkZW50aXR5Ijoi77-9IiwidXNlcl9pZCI6N30.EgPIsOEkhgXuJ78SN4uWnKT4qDnvv5wExWBQakxwaBI")
+		claims, _ := helpers.GetPayloadJWT("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MDM4ODA0ODcsInRva2VuX2lkZW50aXR5Ijoi77-9IiwidXNlcl9pZCI6N30.EgPIsOEkhgXuJ78SN4uWnKT4qDnvv5wExWBQakxwaBI")
 		fmt.Println(claims)
 
 		break
