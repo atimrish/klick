@@ -8,11 +8,11 @@ import (
 const tableName = "messages"
 
 type Message struct {
-	id          uint16
-	userId      uint16
-	text        string
-	photos      []string
-	videos      []post.Video
-	createdTime time.Time
-	updatedTime time.Time
+	Id          int64        `bson:"id,omitempty"`
+	UserId      int64        `bson:"user_id,omitempty"`
+	Text        string       `bson:"text,omitempty"`
+	Photos      []string     `bson:"photos,omitempty"`
+	Videos      []post.Video `bson:"videos,omitempty"`
+	CreatedTime time.Time    `bson:"created_time"`
+	UpdatedTime time.Time    `bson:"updated_time"`
 }

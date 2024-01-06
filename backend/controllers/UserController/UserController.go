@@ -2,13 +2,14 @@ package UserController
 
 import (
 	"backend/controllers/UserController/types"
+	"backend/database/db"
 	"backend/database/models/user"
 	"backend/helpers"
+	"database/sql"
+	"errors"
 	"github.com/gin-gonic/gin"
 	JWT "github.com/golang-jwt/jwt/v5"
 	"math/rand"
-	"path/filepath"
-	"strconv"
 	"time"
 )
 
@@ -37,13 +38,7 @@ func Register(c *gin.Context) {
 
 	if file != nil {
 		helpers.HandleError(err)
-
-		filename = strconv.FormatInt(time.Now().Unix(), 10) + filepath.Ext(file.Filename)
-
-		dst := "storage/user/photos/" + filename
-		err = c.SaveUploadedFile(file, dst)
-		helpers.HandleError(err)
-
+		filename = helpers.SaveFile(c, file, "storage/user/photos/")
 	}
 	newUser := user.User{
 		Surname:  form.Surname,
@@ -195,6 +190,46 @@ func RefreshToken(c *gin.Context)  {
 	c.JSON(200, gin.H{
 		"message": "токен обновлен",
 		"refresh_token": newRefresh,
+	})
+	return
+}
+
+func GetUserInfo(c *gin.Context) {
+	userId := c.Param("user_id")
+
+	connection := db.PostgresConnection()
+
+	defer func() {
+		err := connection.Close()
+		helpers.HandleError(err)
+	}()
+
+	stmt, err := connection.Prepare(
+		`SELECT 
+    				id,
+    				surname,
+    				name,
+    				login,
+    				email,
+    				photo
+			FROM users WHERE id = $1`,
+		)
+	helpers.HandleError(err)
+
+	var u user.User
+	row := stmt.QueryRow(userId)
+	err = row.Scan(&u.Id, &u.Surname, &u.Name, &u.Login, &u.Email, &u.Photo)
+	if errors.Is(err, sql.ErrNoRows) {
+		c.JSON(200, gin.H{
+			"message": "ничего не найдено",
+		})
+		return
+	}
+
+	helpers.HandleError(err)
+
+	c.JSON(200, gin.H{
+		"data": u,
 	})
 	return
 }

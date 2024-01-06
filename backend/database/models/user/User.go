@@ -9,13 +9,13 @@ import (
 const tableName = "users"
 
 type User struct {
-	Id       int64
-	Surname  string
-	Name     string
-	Login    string
-	Password string
-	Email    string
-	Photo    string
+	Id       int64  `json:"id,omitempty"`
+	Surname  string `json:"surname,omitempty"`
+	Name     string `json:"name,omitempty"`
+	Login    string `json:"login,omitempty"`
+	Password string `json:"password,omitempty"`
+	Email    string `json:"email,omitempty"`
+	Photo    string `json:"photo,omitempty"`
 }
 
 func NewUser(id int64, surname, name, login, password, email, photo string) *User {

@@ -201,3 +201,44 @@ func Decline(c *gin.Context) {
 
 	return
 }
+
+func UserFriends(c *gin.Context) {
+	userId := c.Param("user_id")
+
+	connection := db.PostgresConnection()
+
+	defer func() {
+		err := connection.Close()
+		helpers.HandleError(err)
+	}()
+
+	stmt, err := connection.Prepare(
+		`SELECT 
+    				id,
+    				user_id,
+    				friend_id,
+    				status
+			FROM friends WHERE user_id = $1 OR friend_id = $1`,
+	)
+	helpers.HandleError(err)
+
+	rows, err := stmt.Query(userId)
+	defer func(rows *sql.Rows) {
+		helpers.HandleError(rows.Close())
+	}(rows)
+
+	var friends []friend.Friend
+
+	for rows.Next() {
+		var f friend.Friend
+		err := rows.Scan(&f.Id, &f.UserId, &f.FriendId, &f.Status)
+		helpers.HandleError(err)
+
+		friends = append(friends, f)
+	}
+
+	c.JSON(200, gin.H{
+		"data": friends,
+	})
+	return
+}

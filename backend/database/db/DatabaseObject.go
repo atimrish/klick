@@ -60,10 +60,18 @@ func CheckUniquePostgres(table, column string, value any) bool {
 func MongoConnection() (*mongo.Client, context.Context) {
 	config := conf.GetConfig()
 
-	address := fmt.Sprintf("mongodb://%s:%s/", config["mongo_address"], config["mongo_post"])
+	address := fmt.Sprintf("mongodb://%s:%s/", config["mongo_address"], config["mongo_port"])
 
 	ctx := context.TODO()
 	clientOptions := options.Client().ApplyURI(address)
+
+	cred := options.Credential{
+		Username: config["mongo_user"],
+		Password: config["mongo_password"],
+	}
+
+	clientOptions.Auth = &cred
+
 	client, err := mongo.Connect(ctx, clientOptions)
 	helpers.HandleError(err)
 

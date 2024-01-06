@@ -8,10 +8,10 @@ import (
 const tableName = "friends"
 
 type Friend struct {
-	Id       int64
-	UserId   int64
-	FriendId int64
-	Status   string
+	Id       int64  `json:"id,omitempty"`
+	UserId   int64  `json:"user_id,omitempty"`
+	FriendId int64  `json:"friend_id,omitempty"`
+	Status   string `json:"status,omitempty"`
 }
 
 func (f *Friend) Update() {
