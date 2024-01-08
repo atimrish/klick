@@ -59,9 +59,9 @@ func Register(c *gin.Context) {
 	}
 
 	payload := helpers.CustomClaims{
-		UserId:           newUser.Id,
-		TokenIdentity:    tokenIdentity,
-		IsAdmin:          false,
+		UserId:        newUser.Id,
+		TokenIdentity: tokenIdentity,
+		IsAdmin:       false,
 		RegisteredClaims: JWT.RegisteredClaims{
 			ExpiresAt: &expAccess,
 		},
@@ -83,9 +83,9 @@ func Register(c *gin.Context) {
 		time.Now().Add(time.Hour * 48),
 	}
 	payload = helpers.CustomClaims{
-		UserId:           newUser.Id,
-		TokenIdentity:    tokenIdentity,
-		IsAdmin:          false,
+		UserId:        newUser.Id,
+		TokenIdentity: tokenIdentity,
+		IsAdmin:       false,
 		RegisteredClaims: JWT.RegisteredClaims{
 			ExpiresAt: &expRefresh,
 		},
@@ -118,9 +118,9 @@ func Login(c *gin.Context) {
 		}
 
 		payload := helpers.CustomClaims{
-			UserId:           currentUser.Id,
-			TokenIdentity:    tokenIdentity,
-			IsAdmin:          false,
+			UserId:        currentUser.Id,
+			TokenIdentity: tokenIdentity,
+			IsAdmin:       false,
 			RegisteredClaims: JWT.RegisteredClaims{
 				ExpiresAt: &expAccess,
 			},
@@ -142,9 +142,9 @@ func Login(c *gin.Context) {
 			time.Now().Add(time.Hour * 48),
 		}
 		payload = helpers.CustomClaims{
-			UserId:           currentUser.Id,
-			TokenIdentity:    tokenIdentity,
-			IsAdmin:          false,
+			UserId:        currentUser.Id,
+			TokenIdentity: tokenIdentity,
+			IsAdmin:       false,
 			RegisteredClaims: JWT.RegisteredClaims{
 				ExpiresAt: &expRefresh,
 			},
@@ -161,7 +161,7 @@ func Login(c *gin.Context) {
 	})
 }
 
-func RefreshToken(c *gin.Context)  {
+func RefreshToken(c *gin.Context) {
 	var form types.RefreshForm
 	err := c.Bind(&form)
 	helpers.HandleError(err)
@@ -188,7 +188,7 @@ func RefreshToken(c *gin.Context)  {
 	)
 
 	c.JSON(200, gin.H{
-		"message": "токен обновлен",
+		"message":       "токен обновлен",
 		"refresh_token": newRefresh,
 	})
 	return
@@ -213,14 +213,14 @@ func GetUserInfo(c *gin.Context) {
     				email,
     				photo
 			FROM users WHERE id = $1`,
-		)
+	)
 	helpers.HandleError(err)
 
 	var u user.User
 	row := stmt.QueryRow(userId)
 	err = row.Scan(&u.Id, &u.Surname, &u.Name, &u.Login, &u.Email, &u.Photo)
 	if errors.Is(err, sql.ErrNoRows) {
-		c.JSON(200, gin.H{
+		c.JSON(404, gin.H{
 			"message": "ничего не найдено",
 		})
 		return
