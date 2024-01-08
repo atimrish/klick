@@ -111,7 +111,7 @@ func AddPost(c *gin.Context) {
 		Categories: categories,
 	}
 
-	newPost.Insert()
+	go newPost.Insert()
 
 	c.JSON(201, gin.H{
 		"message": "пост добавлен",
@@ -121,6 +121,8 @@ func AddPost(c *gin.Context) {
 
 func DeleteById(c *gin.Context) {
 	postId := c.Param("post_id")
+
+
 
 	err := post.DeletePostById(postId)
 

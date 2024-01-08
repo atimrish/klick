@@ -7,8 +7,12 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-const tableName = "chats"
-const database = "klick"
+const (
+	tableName    = "chats"
+	database     = "klick"
+	TYPE_PRIVATE = "PRIVATE"
+	TYPE_GROUP   = "GROUP"
+)
 
 type Chat struct {
 	Id       primitive.ObjectID `bson:"id,omitempty" json:"id"`
@@ -16,6 +20,7 @@ type Chat struct {
 	Title    string             `bson:"title" json:"title"`
 	Messages []models.Message   `bson:"messages" json:"messages"`
 	Photo    string             `bson:"photo" json:"photo"`
+	Type     string             `bson:"type" json:"type"`
 }
 
 func (c *Chat) Insert() {
