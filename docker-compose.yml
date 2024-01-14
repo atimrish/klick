@@ -30,3 +30,10 @@ services:
         condition: service_started
       mongo:
         condition: service_started
+  messenger:
+    build:
+      context: ./docker/messenger
+    ports:
+      - "3000:3000"
+    volumes:
+      - "./messenger:/srv"

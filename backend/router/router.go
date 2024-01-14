@@ -25,5 +25,11 @@ func InitRouter(router *gin.Engine) {
 	router.POST("/post", PostController.AddPost)
 	router.DELETE("/post/:post_id", PostController.DeleteById)
 
-	router.GET("/ws", ChatController.CreateChat)
+	tmp := func(c *gin.Context) {}
+	router.GET("/chat/:user_id", ChatController.GetChatsByUserId)
+	router.GET("/chat/:chat_id", ChatController.GetChatById)               ///TODO получение сообщений определенного чата
+	router.POST("/chat", ChatController.CreateChat)                        ///TODO создание чата
+	router.POST("/chat/:chat_id", ChatController.PushMessage)              ///TODO отправка сообщения
+	router.PUT("/chat/:chat_id/:message_id", ChatController.UpdateMessage) ///TODO изменение сообщения
+	router.DELETE("/chat/:chat_id/:message_id", tmp)                       ///TODO удаление сообщения
 }

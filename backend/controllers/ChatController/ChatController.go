@@ -1,86 +1,107 @@
 package ChatController
 
 import (
+	"backend/controllers/ChatController/types"
 	"backend/database/models/chat"
 	"backend/database/models/message"
 	"backend/helpers"
-	"encoding/json"
-	"fmt"
 	"github.com/gin-gonic/gin"
-	"github.com/google/uuid"
-	"github.com/gorilla/websocket"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"net/http"
 	"strconv"
-	"time"
 )
 
-var wsUpgrader = websocket.Upgrader{
-	ReadBufferSize:  1024,
-	WriteBufferSize: 1024,
-}
+func GetChatsByUserId(c *gin.Context) {
+	userId := c.Param("user_id")
 
-func wsHandler(w http.ResponseWriter, r *http.Request) {
-	conn, err := wsUpgrader.Upgrade(w, r, nil)
+	userIdInt, err := strconv.Atoi(userId)
 	helpers.HandleError(err)
 
-	for {
-		t, msg, err := conn.ReadMessage()
-		if err != nil {
-			fmt.Println("[websocket] ", err)
-			break
-		}
-		err = conn.WriteMessage(t, msg)
-
-		PushMessage(msg)
-		fmt.Println("[message] ", t, " ", string(msg))
-		helpers.HandleError(err)
+	chats, err := chat.GetByUserId(int64(userIdInt))
+	if err != nil {
+		helpers.ErrorResponse(c, 422, err)
 	}
+
+	c.JSON(200, gin.H{
+		"data": *chats,
+	})
+	return
+}
+
+func GetChatById(c *gin.Context) {
+	chatId := c.Param("chat_id")
+
+	returnedChat, err := chat.GetById(chatId)
+	if err != nil {
+		helpers.ErrorResponse(c, 422, err)
+	}
+
+	c.JSON(200, gin.H{
+		"data": *returnedChat,
+	})
+	return
 }
 
 func CreateChat(c *gin.Context) {
-	wsHandler(c.Writer, c.Request)
+	var form types.CreateChatForm
+	err := c.Bind(&form)
+	helpers.HandleError(err)
+
+	usersArray := form.GetUsersArray()
+
+	var newChat chat.Chat
+
+	newChat.Type = "PERSONAL"
+	newChat.Users = *usersArray
+	go func(c *gin.Context) {
+		newChat.Insert()
+		c.JSON(200, gin.H{
+			"data": gin.H{
+				"chatId": newChat.Id,
+			},
+		})
+		return
+	}(c)
 }
 
-func PushMessage(income []byte) {
+func PushMessage(c *gin.Context) {
+	chatId := c.Param("chat_id")
 
-	type chatId struct {
-		ChatId   string `json:"chat_id"`
-		Receiver int64  `json:"receiver"`
-	}
-	var chatInfo chatId
-
-	var m message.Message
-	err := json.Unmarshal(income, &m)
+	var form types.AddMessageForm
+	err := c.Bind(&form)
 	helpers.HandleError(err)
 
-	err = json.Unmarshal(income, &chatInfo)
+	var newMessage message.Message
+	newMessage.UserId = form.UserId
+	newMessage.Text = form.Text
+
+	objId, err := primitive.ObjectIDFromHex(chatId)
 	helpers.HandleError(err)
 
-	if chatInfo.ChatId == "" {
-		users := []int64{m.UserId, chatInfo.Receiver}
-
-		m.Id = uuid.New().String()
-		m.CreatedTime = strconv.Itoa(int(time.Now().Unix()))
-
-		messages := []message.Message{m}
-
-		newChat := chat.Chat{
-			Users:    users,
-			Title:    "",
-			Messages: messages,
-			Photo:    "",
-			Type:     "PRIVATE",
-		}
-
-		go newChat.Insert()
+	go func(c *gin.Context) {
+		newMessage.PushMessage(objId)
+		c.JSON(201, gin.H{
+			"message": "сообщение отправлено",
+		})
 		return
-	}
+	}(c)
+}
 
-	objId, err := primitive.ObjectIDFromHex(chatInfo.ChatId)
+func UpdateMessage(c *gin.Context) {
+	chatId := c.Param("chat_id")
+	messageId := c.Param("message_id")
+
+	var form types.UpdateMessageForm
+	err := c.Bind(&form)
 	helpers.HandleError(err)
 
-	fmt.Println("[obj id] ", objId)
-	m.PushMessage(objId)
-	return
+	objId, err := primitive.ObjectIDFromHex(chatId)
+	helpers.HandleError(err)
+
+	go func(c *gin.Context) {
+		message.UpdateMessage(objId, messageId, form.Text)
+		c.JSON(200, gin.H{
+			"message": "сообщение обновлено",
+		})
+		return
+	}(c)
 }

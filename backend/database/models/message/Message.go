@@ -48,3 +48,22 @@ func (m *Message) PushMessage(chatId primitive.ObjectID) {
 
 	return
 }
+
+func UpdateMessage(chatId primitive.ObjectID, messageId, text string) {
+	client, context := db.MongoConnection()
+
+	filter := bson.M{
+		"_id":         chatId,
+		"messages.id": messageId,
+	}
+	update := bson.M{
+		"$set": bson.M{
+			"messages.$[].text": text,
+		},
+	}
+
+	_, err := client.Database(database).Collection(tableName).UpdateOne(context, filter, update)
+	helpers.HandleError(err)
+
+	return
+}
