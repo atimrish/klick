@@ -72,13 +72,14 @@ func DeleteMessage(chatId primitive.ObjectID, messageId string) {
 	client, context := db.MongoConnection()
 
 	filter := bson.M{
-		"_id":         chatId,
-		"messages.id": messageId,
+		"_id": chatId,
 	}
 
 	update := bson.M{
 		"$pull": bson.M{
-			"messages": messageId,
+			"messages": bson.M{
+				"id": messageId,
+			},
 		},
 	}
 

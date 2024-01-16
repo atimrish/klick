@@ -11,12 +11,13 @@
     const socket = io()
 
     const data = {
-        chatId: '65a57c423c70948437dfced5',
-        userId: 1,
-        text: 'first'
+        chatId: '65a6cd36cf4250243f1673b2',
+        user_id: 1,
+        messageId: '8b49ac6e-5b5f-41da-bf9c-38547e0eb924',
+        text: 'updated'
     }
 
-    socket.emit('MESSAGE_SEND', data)
+    socket.emit('MESSAGE_UPDATE', data)
 
 </script>
 </body>
