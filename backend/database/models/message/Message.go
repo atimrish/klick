@@ -15,9 +15,9 @@ const database = "klick"
 const tableName = "chats"
 
 type Message struct {
-	Id          string       `bson:"id,omitempty" json:"id,omitempty"`
-	UserId      int64        `bson:"user_id,omitempty" json:"user_id"`
-	Text        string       `bson:"text,omitempty" json:"text"`
+	Id          string       `bson:"id" json:"id,omitempty"`
+	UserId      int64        `bson:"user_id" json:"user_id"`
+	Text        string       `bson:"text" json:"text"`
 	Photos      []string     `bson:"photos,omitempty" json:"photos,omitempty"`
 	Videos      []post.Video `bson:"videos,omitempty" json:"videos,omitempty"`
 	CreatedTime string       `bson:"created_time" json:"created_time"`
@@ -59,6 +59,26 @@ func UpdateMessage(chatId primitive.ObjectID, messageId, text string) {
 	update := bson.M{
 		"$set": bson.M{
 			"messages.$[].text": text,
+		},
+	}
+
+	_, err := client.Database(database).Collection(tableName).UpdateOne(context, filter, update)
+	helpers.HandleError(err)
+
+	return
+}
+
+func DeleteMessage(chatId primitive.ObjectID, messageId string) {
+	client, context := db.MongoConnection()
+
+	filter := bson.M{
+		"_id":         chatId,
+		"messages.id": messageId,
+	}
+
+	update := bson.M{
+		"$pull": bson.M{
+			"messages": messageId,
 		},
 	}
 

@@ -16,7 +16,7 @@ const (
 )
 
 type Chat struct {
-	Id       primitive.ObjectID `bson:"id,omitempty" json:"id"`
+	Id       primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	Users    []int64            `bson:"users" json:"users"`
 	Title    string             `bson:"title" json:"title"`
 	Messages []models.Message   `bson:"messages" json:"messages"`

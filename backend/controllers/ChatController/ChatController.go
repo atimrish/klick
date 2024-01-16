@@ -5,6 +5,7 @@ import (
 	"backend/database/models/chat"
 	"backend/database/models/message"
 	"backend/helpers"
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"strconv"
@@ -52,6 +53,7 @@ func CreateChat(c *gin.Context) {
 
 	newChat.Type = "PERSONAL"
 	newChat.Users = *usersArray
+	newChat.Messages = []message.Message{}
 	go func(c *gin.Context) {
 		newChat.Insert()
 		c.JSON(200, gin.H{
@@ -69,6 +71,9 @@ func PushMessage(c *gin.Context) {
 	var form types.AddMessageForm
 	err := c.Bind(&form)
 	helpers.HandleError(err)
+
+	fmt.Println("[form] ", form)
+	fmt.Println("[ctx] ", c.Request)
 
 	var newMessage message.Message
 	newMessage.UserId = form.UserId
@@ -101,6 +106,22 @@ func UpdateMessage(c *gin.Context) {
 		message.UpdateMessage(objId, messageId, form.Text)
 		c.JSON(200, gin.H{
 			"message": "сообщение обновлено",
+		})
+		return
+	}(c)
+}
+
+func DeleteMessage(c *gin.Context) {
+	chatId := c.Param("chat_id")
+	messageId := c.Param("message_id")
+
+	objId, err := primitive.ObjectIDFromHex(chatId)
+	helpers.HandleError(err)
+
+	go func(c *gin.Context) {
+		message.DeleteMessage(objId, messageId)
+		c.JSON(200, gin.H{
+			"message": "сообщение удалено",
 		})
 		return
 	}(c)

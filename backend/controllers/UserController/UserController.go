@@ -233,3 +233,46 @@ func GetUserInfo(c *gin.Context) {
 	})
 	return
 }
+
+func GetInfoMyself(c *gin.Context) {
+	accessToken, err := c.Cookie("access_token")
+	if err != nil {
+		helpers.ErrorResponse(c, 422, err)
+		return
+	}
+
+	payload, err := helpers.GetPayloadJWT(accessToken)
+	if err != nil {
+		helpers.TokenExpiredResponse(c)
+		return
+	}
+
+	connection := db.PostgresConnection()
+
+	defer func() {
+		err := connection.Close()
+		helpers.HandleError(err)
+	}()
+
+	stmt, err := connection.Prepare(
+		`SELECT 
+    				id,
+    				surname,
+    				name,
+    				login,
+    				email,
+    				photo
+			FROM users WHERE id = $1`,
+	)
+	helpers.HandleError(err)
+
+	var u user.User
+	row := stmt.QueryRow(payload.UserId)
+	err = row.Scan(&u.Id, &u.Surname, &u.Name, &u.Login, &u.Email, &u.Photo)
+	helpers.HandleError(err)
+
+	c.JSON(200, gin.H{
+		"data": u,
+	})
+	return
+}

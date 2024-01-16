@@ -10,7 +10,13 @@
 <script>
     const socket = io()
 
-    socket.emit('MESSAGE_SEND', "asdsasdd")
+    const data = {
+        chatId: '65a57c423c70948437dfced5',
+        userId: 1,
+        text: 'first'
+    }
+
+    socket.emit('MESSAGE_SEND', data)
 
 </script>
 </body>

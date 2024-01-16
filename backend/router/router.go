@@ -10,6 +10,7 @@ import (
 
 func InitRouter(router *gin.Engine) {
 	router.GET("/userinfo/:user_id", UserController.GetUserInfo)
+	router.GET("/userinfo", UserController.GetInfoMyself)
 
 	router.POST("/register", UserController.Register)
 	router.POST("/login", UserController.Login)
@@ -25,11 +26,10 @@ func InitRouter(router *gin.Engine) {
 	router.POST("/post", PostController.AddPost)
 	router.DELETE("/post/:post_id", PostController.DeleteById)
 
-	tmp := func(c *gin.Context) {}
-	router.GET("/chat/:user_id", ChatController.GetChatsByUserId)
-	router.GET("/chat/:chat_id", ChatController.GetChatById)               ///TODO получение сообщений определенного чата
-	router.POST("/chat", ChatController.CreateChat)                        ///TODO создание чата
-	router.POST("/chat/:chat_id", ChatController.PushMessage)              ///TODO отправка сообщения
-	router.PUT("/chat/:chat_id/:message_id", ChatController.UpdateMessage) ///TODO изменение сообщения
-	router.DELETE("/chat/:chat_id/:message_id", tmp)                       ///TODO удаление сообщения
+	router.GET("/userchat/:user_id", ChatController.GetChatsByUserId)
+	router.GET("/chat/:chat_id", ChatController.GetChatById)
+	router.POST("/chat", ChatController.CreateChat)
+	router.POST("/chat/:chat_id", ChatController.PushMessage)
+	router.PUT("/chat/:chat_id/:message_id", ChatController.UpdateMessage)
+	router.DELETE("/chat/:chat_id/:message_id", ChatController.DeleteMessage)
 }
